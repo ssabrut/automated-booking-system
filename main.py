@@ -101,5 +101,5 @@ def invoke_tool(tool_call_request: ToolCallRequest, config: Optional[RunnableCon
         requested_tool.invoke(arguments, config=config)
  
 chain = prompt | agent | JsonOutputParser() | invoke_tool
-print(chain.invoke({"input": "My name is John Doe, and I would like to book an appointment for 10 to 11 on 2020-01-01"}))
-print(booking.__dict__)
+# print(chain.invoke({"input": "My name is John Doe, and I would like to book an appointment for 10 to 11 on 2020-01-01"}))
+# print(booking.__dict__)
