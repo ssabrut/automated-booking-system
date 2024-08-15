@@ -1,6 +1,6 @@
-from langchain_core.pydantic_v1 import BaseModel
+from typing import Any
 
-class Booking(BaseModel):
+class Booking:
     """
     A model representing a booking.
 
@@ -17,3 +17,25 @@ class Booking(BaseModel):
     date: str
     start_time: str
     end_time: str
+
+    def __getattribute__(self, name: str) -> Any:
+        """
+        Retrieve an attribute of the booking.
+
+        Args:
+            name (str): The name of the attribute to retrieve.
+
+        Returns:
+            Any: The value of the requested attribute.
+        """
+        return super().__getattribute__(name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """
+        Set an attribute of the booking.
+
+        Args:
+            name (str): The name of the attribute to set.
+            value (Any): The value to set for the attribute.
+        """
+        super().__setattr__(name, value)
