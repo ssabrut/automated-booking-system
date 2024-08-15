@@ -30,101 +30,73 @@
 # #                 and selected_start_time <= end_time <= selected_end_time:
 # #             print(name, date, start_time, end_time)
 
-# from src.config.agents import Agent
-# from langchain_core.tools import tool
-# from langchain_core.output_parsers import JsonOutputParser
-# from langchain_core.prompts import ChatPromptTemplate
-# from langchain_core.tools import render_text_description
+# selected_date = "2020-01-01"
+# selected_start_time = datetime.datetime.strptime("10:00", "%H:%M").time()
+# selected_end_time = datetime.datetime.strptime("10:10", "%H:%M").time()
 
-# agent = Agent()
+from src.config.agents import Agent
+from src.tools.rag import check_name, check_date
+from src.tools.properties import booking
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.tools import render_text_description
+from typing import Any, Dict, Optional, TypedDict
+from langchain_core.runnables import RunnableConfig
 
-# @tool
-# def add(x: float, y: float) -> float:
-#     """
-#     This function takes two float numbers as input and returns their sum.
+agent = Agent()
 
-#     Parameters:
-#         x (float): The first number.
-#         y (float): The second number.
+tools = [check_name, check_date]
+rendered_tools = render_text_description(tools)
+system_prompt = f"""\
+You are an assistant that has access to the following set of tools. 
+Here are the names and descriptions for each tool:
 
-#     Returns:
-#         float: The sum of x and y.
-#     """
-#     return x + y
+{rendered_tools}
 
-# @tool
-# def check_name(name: str) -> str:
-#     """
-#     This function takes a string as input and returns the name.
+Given the user input, return the name and input of the tool to use. 
+Return your response as a JSON blob with 'name' and 'arguments' keys.
 
-#     Parameters:
-#         name (str): The name.
+If the input contains the word "name", refine the prompt to specifically check for the presence of a name in the booking system.
+If the input contains the word "date", refine the prompt to specifically check for the presence of a date in the booking system. Convert the date string to "YYYY-MM-DD" format. The month can be in numerical format (e.g., "03" for March) or text format (e.g., "March" or "Mar" or "march" or "mar").
+If the input contains the word "start_time", refine the prompt to specifically check for the presence of a start time in the booking system.
+If the input contains the word "end_time", refine the prompt to specifically check for the presence of an end time in the booking system.
 
-#     Returns:
-#         str: The name.
-#     """
-#     return name
+The `arguments` should be a dictionary, with keys corresponding 
+to the argument names and the values corresponding to the requested values.
+"""
 
-# tools = [add, check_name]
-# rendered_tools = render_text_description(tools)
-# system_prompt = f"""\
-# You are an assistant that has access to the following set of tools. 
-# Here are the names and descriptions for each tool:
-
-# {rendered_tools}
-
-# Given the user input, return the name and input of the tool to use. 
-# Return your response as a JSON blob with 'name' and 'arguments' keys.
-
-# The `arguments` should be a dictionary, with keys corresponding 
-# to the argument names and the values corresponding to the requested values.
-# """
-
-# prompt = ChatPromptTemplate.from_messages(
-#     [("system", system_prompt), ("user", "{input}")]
-# )
-
-# chain = prompt | agent
-# message = chain.invoke({"input": "what's 3 plus 1132"})
-
-# chain = prompt | agent | JsonOutputParser()
-
-# from typing import Any, Dict, Optional, TypedDict
-
-# from langchain_core.runnables import RunnableConfig
+prompt = ChatPromptTemplate.from_messages(
+    [("system", system_prompt), ("user", "{input}")]
+)
 
 
-# class ToolCallRequest(TypedDict):
-#     """A typed dict that shows the inputs into the invoke_tool function."""
+class ToolCallRequest(TypedDict):
+    """A typed dict that shows the inputs into the invoke_tool function."""
 
-#     name: str
-#     arguments: Dict[str, Any]
+    name: str
+    arguments: Dict[str, Any]
 
 
-# def invoke_tool(
-#     tool_call_request: ToolCallRequest, config: Optional[RunnableConfig] = None
-# ):
-#     """A function that we can use the perform a tool invocation.
+def invoke_tool(
+    tool_call_request: ToolCallRequest, config: Optional[RunnableConfig] = None
+):
+    """A function that we can use the perform a tool invocation.
 
-#     Args:
-#         tool_call_request: a dict that contains the keys name and arguments.
-#             The name must match the name of a tool that exists.
-#             The arguments are the arguments to that tool.
-#         config: This is configuration information that LangChain uses that contains
-#             things like callbacks, metadata, etc.See LCEL documentation about RunnableConfig.
+    Args:
+        tool_call_request: a dict that contains the keys name and arguments.
+            The name must match the name of a tool that exists.
+            The arguments are the arguments to that tool.
+        config: This is configuration information that LangChain uses that contains
+            things like callbacks, metadata, etc.See LCEL documentation about RunnableConfig.
 
-#     Returns:
-#         output from the requested tool
-#     """
-#     tool_name_to_tool = {tool.name: tool for tool in tools}
-#     name = tool_call_request["name"]
-#     requested_tool = tool_name_to_tool[name]
-#     return requested_tool.invoke(tool_call_request["arguments"], config=config)
+    Returns:
+        output from the requested tool
+    """
+    tool_name_to_tool = {tool.name: tool for tool in tools}
+    name = tool_call_request["name"]
+    requested_tool = tool_name_to_tool[name]
+    return requested_tool.invoke(tool_call_request["arguments"], config=config)
  
-# chain = prompt | agent | JsonOutputParser() | invoke_tool
-# print(chain.invoke({"input": "Hello, I'm Bob!"}))
-
-
-# # selected_date = "2020-01-01"
-# # selected_start_time = datetime.datetime.strptime("10:00", "%H:%M").time()
-# # selected_end_time = datetime.datetime.strptime("10:10", "%H:%M").time()
+chain = prompt | agent | JsonOutputParser() | invoke_tool
+print(chain.invoke({"input": "I want to book in january 1, 2024"}))
+print(booking.__dict__)
