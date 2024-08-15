@@ -46,6 +46,7 @@ from langchain_core.runnables import RunnableConfig
 agent = Agent()
 
 tools = [check_name, check_date, check_start_time, check_end_time, check_time_range]
+tools_map = {tool.name: tool for tool in tools}
 rendered_tools = render_text_description(tools)
 system_prompt = f"""\
 You are an assistant that has access to the following set of tools. 
@@ -53,16 +54,19 @@ Here are the names and descriptions for each tool:
 
 {rendered_tools}
 
-Given the user input, return the name and input of the tool to use. 
-Return your response as a JSON blob with 'name' and 'arguments' keys.
+Given the user input, return the names and inputs of the tools to use. 
+Return your response as a JSON blob with a 'tools' key. The value of 'tools' should be a list of dictionaries, each containing 'name' and 'arguments' keys.
 
 If the input contains the word "name", refine the prompt to specifically check for the presence of a name in the booking system.
-If the input contains the word "date", refine the prompt to specifically check for the presence of a date in the booking system. Convert the date string to "YYYY-MM-DD" format. The month can be in numerical format (e.g., "03" for March) or text format (e.g., "March" or "Mar" or "march" or "mar").
+If the input contains the word "date", refine the prompt to specifically check for the presence of a date in the booking system. The date can be in "YYYY-MM-DD" format or "DD-MM-YYYY" format. Convert the date string to "YYYY-MM-DD" format. The month can be in numerical format (e.g., "03" for March) or text format (e.g., "March" or "Mar" or "march" or "mar").
 If the input contains the word "start_time", refine the prompt to specifically check for the presence of a start time in the booking system. The time can be in numerical format (e.g., "14:00" for 2 PM) or text format (e.g., "2 PM" or "2 P.M."). Convert the time to 24-hour format if it is not already in that format. The time input could also be in a range format (e.g., "10 to 11" or "10-11"). Ensure both times in the range are converted to 24-hour format if they are not already.
 If the input contains the word "end_time", refine the prompt to specifically check for the presence of an end time in the booking system. The time can be in numerical format (e.g., "18:00" for 6 PM) or text format (e.g., "6 PM" or "6 P.M."). Convert the time to 24-hour format if it is not already in that format. The time input could also be in a range format (e.g., "10 to 11" or "10-11"). Ensure both times in the range are converted to 24-hour format if they are not already.
 
-The `arguments` should be a dictionary, with keys corresponding 
-to the argument names and the values corresponding to the requested values.
+If the input contains more than one property (e.g., name, date, start_time, end_time), call the corresponding tools in parallel.
+
+After the user inputs "date", "start_time", and "end_time", check if the slot is available for booking.
+
+The `tools` list should contain dictionaries, each with 'name' and 'arguments' keys, corresponding to the tools to be used and their respective arguments. The `arguments` should be a dictionary, with keys corresponding to the argument names and the values corresponding to the requested values.
 """
 
 prompt = ChatPromptTemplate.from_messages(
@@ -77,9 +81,7 @@ class ToolCallRequest(TypedDict):
     arguments: Dict[str, Any]
 
 
-def invoke_tool(
-    tool_call_request: ToolCallRequest, config: Optional[RunnableConfig] = None
-):
+def invoke_tool(tool_call_request: ToolCallRequest, config: Optional[RunnableConfig] = None):
     """A function that we can use the perform a tool invocation.
 
     Args:
@@ -92,11 +94,12 @@ def invoke_tool(
     Returns:
         output from the requested tool
     """
-    tool_name_to_tool = {tool.name: tool for tool in tools}
-    name = tool_call_request["name"]
-    requested_tool = tool_name_to_tool[name]
-    return requested_tool.invoke(tool_call_request["arguments"], config=config)
+    for tool in tool_call_request["tools"]:
+        name = tool["name"]
+        arguments = tool["arguments"]
+        requested_tool = tools_map[name]
+        requested_tool.invoke(arguments, config=config)
  
 chain = prompt | agent | JsonOutputParser() | invoke_tool
-print(chain.invoke({"input": "I want to book from 11 AM to 13"}))
+print(chain.invoke({"input": "My name is John Doe, and I would like to book an appointment for 10 to 11 on 2020-01-01"}))
 print(booking.__dict__)
