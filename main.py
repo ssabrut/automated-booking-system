@@ -35,7 +35,7 @@
 # selected_end_time = datetime.datetime.strptime("10:10", "%H:%M").time()
 
 from src.config.agents import Agent
-from src.tools.rag import check_name, check_date
+from src.tools.rag import check_name, check_date, check_start_time, check_end_time, check_time_range
 from src.tools.properties import booking
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -45,7 +45,7 @@ from langchain_core.runnables import RunnableConfig
 
 agent = Agent()
 
-tools = [check_name, check_date]
+tools = [check_name, check_date, check_start_time, check_end_time, check_time_range]
 rendered_tools = render_text_description(tools)
 system_prompt = f"""\
 You are an assistant that has access to the following set of tools. 
@@ -58,8 +58,8 @@ Return your response as a JSON blob with 'name' and 'arguments' keys.
 
 If the input contains the word "name", refine the prompt to specifically check for the presence of a name in the booking system.
 If the input contains the word "date", refine the prompt to specifically check for the presence of a date in the booking system. Convert the date string to "YYYY-MM-DD" format. The month can be in numerical format (e.g., "03" for March) or text format (e.g., "March" or "Mar" or "march" or "mar").
-If the input contains the word "start_time", refine the prompt to specifically check for the presence of a start time in the booking system.
-If the input contains the word "end_time", refine the prompt to specifically check for the presence of an end time in the booking system.
+If the input contains the word "start_time", refine the prompt to specifically check for the presence of a start time in the booking system. The time can be in numerical format (e.g., "14:00" for 2 PM) or text format (e.g., "2 PM" or "2 P.M."). Convert the time to 24-hour format if it is not already in that format. The time input could also be in a range format (e.g., "10 to 11" or "10-11"). Ensure both times in the range are converted to 24-hour format if they are not already.
+If the input contains the word "end_time", refine the prompt to specifically check for the presence of an end time in the booking system. The time can be in numerical format (e.g., "18:00" for 6 PM) or text format (e.g., "6 PM" or "6 P.M."). Convert the time to 24-hour format if it is not already in that format. The time input could also be in a range format (e.g., "10 to 11" or "10-11"). Ensure both times in the range are converted to 24-hour format if they are not already.
 
 The `arguments` should be a dictionary, with keys corresponding 
 to the argument names and the values corresponding to the requested values.
@@ -98,5 +98,5 @@ def invoke_tool(
     return requested_tool.invoke(tool_call_request["arguments"], config=config)
  
 chain = prompt | agent | JsonOutputParser() | invoke_tool
-print(chain.invoke({"input": "I want to book in january 1, 2024"}))
+print(chain.invoke({"input": "I want to book from 11 AM to 13"}))
 print(booking.__dict__)

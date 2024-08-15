@@ -32,3 +32,11 @@ def check_end_time(end_time: str) -> None:
     Check the end time for the booking.
     """
     booking.end_time = datetime.strptime(end_time, "%H:%M").time()
+
+@tool
+def check_time_range(start_time: str, end_time: str) -> None:
+    """
+    Check the time range for the booking.
+    """
+    booking.start_time = datetime.strptime(start_time, "%H:%M").time()
+    booking.end_time = datetime.strptime(end_time, "%H:%M").time()
