@@ -1,19 +1,10 @@
-import os
+from src.config.agents import Agent
+from langchain_core.messages import HumanMessage
 
-from dotenv import load_dotenv
-from huggingface_hub import InferenceClient
-load_dotenv()
+# Config agent
+agent = Agent()
 
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
-
-client = InferenceClient(
-    "meta-llama/Meta-Llama-3-8B-Instruct",
-    token=HUGGINGFACE_API_KEY,
-)
-
-for message in client.chat_completion(
-	messages=[{"role": "user", "content": "What is the capital of France?"}],
-	max_tokens=500,
-	stream=True,
-):
-    print(message.choices[0].delta.content, end="")
+# Add messages to memory
+messages = [HumanMessage(content="Hello, I'm Bob!")]
+response = agent.invoke(messages)
+print(response)
