@@ -6,13 +6,88 @@ Here are the names and descriptions for each tool:
 Given the user input, return the names and inputs of the tools to use. 
 Return your response as a JSON blob with a 'tools' key. The value of 'tools' should be a list of dictionaries, each containing 'name' and 'arguments' keys.
 
-If the input contains the word "name", refine the prompt to specifically check for the presence of a name in the booking system.
-If the input contains the word "date", refine the prompt to specifically check for the presence of a date in the booking system. The date can be in "YYYY-MM-DD" format or "DD-MM-YYYY" format. Convert the date string to "YYYY-MM-DD" format. The month can be in numerical format (e.g., "03" for March) or text format (e.g., "March" or "Mar" or "march" or "mar").
-If the input contains the word "start_time", refine the prompt to specifically check for the presence of a start time in the booking system. The time can be in numerical format (e.g., "14:00" for 2 PM) or text format (e.g., "2 PM" or "2 P.M."). Convert the time to 24-hour format if it is not already in that format. The time input could also be in a range format (e.g., "10 to 11" or "10-11"). Ensure both times in the range are converted to 24-hour format if they are not already.
-If the input contains the word "end_time", refine the prompt to specifically check for the presence of an end time in the booking system. The time can be in numerical format (e.g., "18:00" for 6 PM) or text format (e.g., "6 PM" or "6 P.M."). Convert the time to 24-hour format if it is not already in that format. The time input could also be in a range format (e.g., "10 to 11" or "10-11"). Ensure both times in the range are converted to 24-hour format if they are not already.
+Given the user input, check whether the input contains a name. If a name is found, return the name.
 
-If the input contains more than one property (e.g., name, date, start_time, end_time), call the corresponding tools in parallel.
+Example:
+Input: "Hello, my name is John Doe."
+Output: "John Doe"
 
-After the user inputs "date", "start_time", and "end_time", check if the slot is available for booking.
+Input: "Hi, I'm Alice."
+Output: "Alice"
 
-The `tools` list should contain dictionaries, each with 'name' and 'arguments' keys, corresponding to the tools to be used and their respective arguments. The `arguments` should be a dictionary, with keys corresponding to the argument names and the values corresponding to the requested values.
+Input: "My name is Bob."
+Output: "Bob"
+
+Input: "I'm Charlie."
+Output: "Charlie"
+
+Given the user input, check whether it contains a valid date consisting of day, month, and year. The date format in the input could vary. For example, it could be in "DD/MM/YYYY", "MM-DD-YYYY", or "YYYY.MM.DD" format or even "10 January 2020". If a valid date is found, return the date and ensure to parse these formats correctly and return the date in "YYYY-MM-DD" format.
+
+Example:
+Input: "The event is scheduled for 25/12/2021."
+Output: "2021-12-25"
+
+Input: "My birthday is on 07-04-1995."
+Output: "1995-04-07"
+
+Input: "The document was signed on 2020.03.15."
+Output: "2020-03-15"
+
+Input: "We met on 10 January 2020."
+Output: "2020-01-10"
+
+Given the user input, check whether it contains a range of start time and end time. The input time could be in various formats, such as "3:30 PM - 4:45 PM", "15:30 - 16:45", "03:30 PM to 04:45 PM", "10 to 11", or "10-11". If a range of time is found, return the start and end time into 24-hour format and "%H:%M" format.
+
+Example:
+Input: "The meeting is scheduled from 3:30 PM - 4:45 PM"
+Output: "Start time: 15:30, End time: 16:45"
+
+Input: "Office hours are from 15:30 to 16:45"
+Output: "Start time: 15:30, End time: 16:45"
+
+Input: "The event will be held from 03:30 PM to 04:45 PM"
+Output: "Start time: 15:30, End time: 16:45"
+
+Input: "The class is from 10 to 11"
+Output: "Start time: 10:00, End time: 11:00"
+
+Input: "The shift is from 10-11"
+Output: "Start time: 10:00, End time: 11:00"
+
+Input: "The webinar will take place from 1:00 PM to 2:30 PM"
+Output: "Start time: 13:00, End time: 14:30"
+
+Input: "The gym is open from 06:00 AM to 08:00 AM"
+Output: "Start time: 06:00, End time: 08:00"
+
+Input: "The store operates from 9 AM - 5 PM"
+Output: "Start time: 09:00, End time: 17:00"
+
+Input: "The library hours are from 14:00 to 18:00"
+Output: "Start time: 14:00, End time: 18:00"
+
+Input: "The concert is from 7 PM to 10 PM"
+Output: "Start time: 19:00, End time: 22:00"
+
+Input: "The meeting is from 8:15 AM to 9:45 AM"
+Output: "Start time: 08:15, End time: 09:45"
+
+Input: "The event is from 12:00 PM to 1:30 PM"
+Output: "Start time: 12:00, End time: 13:30"
+
+Input: "The class is from 11:00 AM to 12:00 PM"
+Output: "Start time: 11:00, End time: 12:00"
+
+Input: "The shift is from 00:00 to 08:00"
+Output: "Start time: 00:00, End time: 08:00"
+
+Input: "The event is from 23:00 to 01:00"
+Output: "Start time: 23:00, End time: 01:00"
+
+Input: "The meeting is from 5:45 PM to 7:15 PM"
+Output: "Start time: 17:45, End time: 19:15"
+
+Input: "The event is from 4:00 PM to 5:30 PM"
+Output: "Start time: 16:00, End time: 17:30"
+
+The `tools` list should contain dictionaries, each with 'name' and 'arguments' keys, corresponding to the tools to be used and their respective arguments. The `arguments` should be a dictionary, with keys corresponding to the argument names and the values corresponding to the requested values. If a tool does not require any arguments, the `arguments` dictionary should be empty.
