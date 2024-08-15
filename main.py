@@ -12,10 +12,6 @@ import datetime
 # response = agent.invoke(messages)
 # print(response)
 
-selected_date = "2020-01-01"
-selected_start_time = datetime.datetime.strptime("10:00", "%H:%M").time()
-selected_end_time = datetime.datetime.strptime("12:00", "%H:%M").time()
-
 # if selected_start_time <= temp <= selected_end_time:
 #     print("temp is within the range")
 # else:
@@ -56,7 +52,20 @@ def add(x: float, y: float) -> float:
     """
     return x + y
 
-tools = [add]
+@tool
+def check_name(name: str) -> str:
+    """
+    This function takes a string as input and returns the name.
+
+    Parameters:
+        name (str): The name.
+
+    Returns:
+        str: The name.
+    """
+    return name
+
+tools = [add, check_name]
 rendered_tools = render_text_description(tools)
 system_prompt = f"""\
 You are an assistant that has access to the following set of tools. 
@@ -111,7 +120,11 @@ def invoke_tool(
     name = tool_call_request["name"]
     requested_tool = tool_name_to_tool[name]
     return requested_tool.invoke(tool_call_request["arguments"], config=config)
-
+ 
 chain = prompt | agent | JsonOutputParser() | invoke_tool
-print(chain.invoke({"input": "what's thirteen plus 4.14137281"}))
+print(chain.invoke({"input": "Hello, I'm Bob!"}))
 
+
+# selected_date = "2020-01-01"
+# selected_start_time = datetime.datetime.strptime("10:00", "%H:%M").time()
+# selected_end_time = datetime.datetime.strptime("10:10", "%H:%M").time()
