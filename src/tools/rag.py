@@ -1,20 +1,58 @@
 import csv
-
+from src.tools.properties import booking
 from datetime import datetime
+from langchain_core.tools import tool
 
 FILE_PATH = "data/booking.csv"
 
+@tool
+def set_name(name: str) -> str:
+    """
+    Set the name for the booking.
 
+    Args:
+        name (str): The name to set for the booking.
 
-# with open("data/booking.csv", "r") as f:
-#     reader = csv.reader(f)
-#     next(reader)  # Skip header row
-#     for row in reader:
-#         name = row[1]
-#         date = row[2]
-#         start_time = datetime.datetime.strptime(row[3], "%H:%M").time()
-#         end_time = datetime.datetime.strptime(row[4], "%H:%M").time()
-#         if date == selected_date \
-#             and selected_start_time <= start_time <= selected_end_time \
-#                 and selected_start_time <= end_time <= selected_end_time:
-#             print(name, date, start_time, end_time)
+    Returns:
+        str: The name that was set.
+    """
+    booking.name = name
+
+@tool
+def set_date(date: str) -> str:
+    """
+    Set the date for the booking.
+
+    Args:
+        date (str): The date to set for the booking.
+
+    Returns:
+        str: The date that was set.
+    """
+    booking.date = date
+
+@tool
+def set_start_time(start_time: str) -> str:
+    """
+    Set the start time for the booking.
+
+    Args:
+        start_time (str): The start time to set for the booking in "HH:MM" format.
+
+    Returns:
+        str: The start time that was set.
+    """
+    booking.start_time = datetime.strptime(start_time, "%H:%M").time()
+
+@tool
+def set_end_time(end_time: str) -> str:
+    """
+    Set the end time for the booking.
+
+    Args:
+        end_time (str): The end time to set for the booking in "HH:MM" format.
+
+    Returns:
+        str: The end time that was set.
+    """
+    booking.end_time = datetime.strptime(end_time, "%H:%M").time()

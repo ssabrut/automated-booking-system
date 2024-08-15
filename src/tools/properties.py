@@ -1,4 +1,5 @@
 from typing import Any
+from datetime import datetime
 
 class Booking:
     """
@@ -15,8 +16,8 @@ class Booking:
     id: str
     name: str
     date: str
-    start_time: str
-    end_time: str
+    start_time: datetime.time
+    end_time: datetime.time
 
     def __getattribute__(self, name: str) -> Any:
         """
@@ -39,3 +40,5 @@ class Booking:
             value (Any): The value to set for the attribute.
         """
         super().__setattr__(name, value)
+
+booking = Booking()
